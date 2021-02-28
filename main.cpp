@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <string.h>
+#include <cmath>
 
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
@@ -7,7 +8,13 @@
 // Window dimensions
 const GLint WIDTH = 800, HEIGHT = 600;
 
-GLuint VAO, VBO, shader;
+GLuint VAO, VBO, shader, uniformXMove;
+
+// Uniform variables
+bool direction = true;
+float triOffset = 0.0f;
+float triMaxoffset = 0.7f;
+float triIncrement = 0.005f;
 
 // Vertex Shader (should be in another file)
 static const char* vShader = "                                  \n\
@@ -15,9 +22,11 @@ static const char* vShader = "                                  \n\
                                                                 \n\
 layout (location=0) in vec3 pos; // in:input                    \n\
                                                                 \n\
+uniform float xMove;                                            \n\
+                                                                \n\
 void main() {                                                   \n\
     // (* 0.4) translates the points, in x and y axis           \n\
-    gl_Position = vec4(0.4 * pos.x, 0.4 * pos.y, pos.z, 1.0);   \n\
+    gl_Position = vec4(0.4 * pos.x + xMove, 0.4 * pos.y, pos.z, 1.0);   \n\
 }";
 
 // Fragment Shader
@@ -117,7 +126,7 @@ void CompileShaders() {
         return;
     }
 
-
+    uniformXMove = glGetUniformLocation(shader, "xMove"); // from layout location=0
 }
 
 int main() {
@@ -175,12 +184,27 @@ int main() {
         // Get + handle user input events
         glfwPollEvents();
 
+        // Moving triangle (using uniform variables!)
+        if (direction) { // right
+            triOffset += triIncrement;
+        } else { // left
+            triOffset -= triIncrement;
+        }
+
+        // Changing triangle direction
+        if (abs(triOffset) >= triMaxoffset) {
+            direction = !direction;
+        }
+
         // Clear window
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f); // RGB -> [0,1], opacity (alpha)
         glClear(GL_COLOR_BUFFER_BIT);
 
         // Shaders and rendering pipeline
         glUseProgram(shader);
+
+        // bindind to 1 value of float
+        glUniform1f(uniformXMove, triOffset);
 
         glBindVertexArray(VAO); // bind
         glDrawArrays(GL_TRIANGLES, 0, 3); // start from point 0, 3 points

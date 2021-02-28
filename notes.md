@@ -53,53 +53,55 @@ g++ -std=c++11 main.cpp -o out -lGLEW -lGL -lGLU -lglfw3 -lX11 -lXxf86vm -lXrand
 ### The rendering pipeline stages
 
 1. Vertex specification  
-- vertex $(x,y,z)$
+- vertex `(x,y,z)`
 - primitive: simple shape defined by vertices
 - set up data of vertices for the primitives we want to render
 - done in the application itself
 - uses VAOs (vertex array objects, defines what data a vertex has) and VBOs (vertex buffer objects, defines the data itself)
 - attribute pointers define where and how shaders can access vertex data
-    1. create VAO/VBO
-    1. initiate draw
 
-1. Vertex shader (programmable)
+    i. create VAO/VBO  
+    ii. initiate draw
+
+2. Vertex shader (programmable)
 - handles vertices individually
 - not optional
 - can specify additional outputs
 - inputs consist of the vertex data itself
 
-1. Tessellation (programmable)
+3. Tessellation (programmable)
 - allows you to divide data in to smaller primitives
 - can be used to add higher levels of detail dynamically
 
-1. Geometry shade (programmable)
+4. Geometry shade (programmable)
 - handles primitives
 - takes primitives then "emits" their vertices to create the given primitives
 - can create and modify primitives
 - can alter primitive type
 
-1. Vertex post-processing
-    1. Tranform Feedback
-    - result of vertex and geometry stages saved to buffers for later use
-    1. Clipping
+5. Vertex post-processing  
+    i. Tranform Feedback
+    - result of vertex and geometry stages saved to buffers for later use   
+
+    ii. Clipping
     - primitive that won't be visible are removed
     - positions converted from "clip-space" to "window space"
 
-1. Primitive assembly
+6. Primitive assembly
 - vertices converted in to a series of primitives
 - face culling: removal of primitives that can't be seen
 
-1. Rasterization
+7. Rasterization
 - converts primitives to "fragments"
 - fragments are pieces of data for each pixel
 - fragment data will be interpolated based on its position relative to each vertex
 
-1. Fragment shader (programmable)
+8. Fragment shader (programmable)
 - handles data for each fragment
 - optional but it's rare not to use it (exceptions are cases where only depth or stencil data is required)
 - most important output is the color of the pixel that the fragment covers
 
-1. Per-sample operations
+9. Per-sample operations
 - series of tests run to see if the fragment should be drawn
 - most important test: DEPTH TEST (determines if something is in front of the point being drawn)
 - color blending: overlapping fragments - used to handle transparency
@@ -108,3 +110,83 @@ g++ -std=c++11 main.cpp -o out -lGLEW -lGL -lGLU -lglfw3 -lX11 -lXxf86vm -lXrand
 
 ### Shader programs
 - Created with at least a vertex shader and then activated before use
+
+---
+
+## Vectors, matrices and uniform variables
+- the GLM (OpenGL Mathematics) library will handle all the maths
+
+### Vectors
+- some basic definitions and operations
+- dot product: `v1·v2 = |v1|*|v2|*cos(θ)`
+- cross product only works in 3d
+
+### Matrices
+- some basic definitions and operations
+- matrix transformations (translation, rotation, scaling)
+1. **Translation**  
+    - changing of `(X,Y,Z)` position of point `(x,y,z)`
+    ```
+    _          _   _ _   _     _  
+    |1  0  0  X|   |x|   |x + X|  
+    |0  1  0  Y| . |y| = |y + Y|  
+    |0  0  1  Z|   |z|   |z + Z|  
+    |0  0  0  1|   |1|   |  1  |
+    -          -   - -   -     -  
+    ```
+2. Scaling
+    - resizes vector by a factor of S
+    ```
+    _          _    _ _   _    _  
+    |SX  0  0  X|   |x|   |SX·x|  
+    |0  SY  0  Y| . |y| = |SY·y|  
+    |0  0  SZ  Z|   |z|   |SZ·z|  
+    |0  0  0   1|   |1|   |  1 |
+    -          -    - -   -    -  
+    ```
+3. Rotation
+    - rotates vector around its origin
+
+    i. x rotation
+    ```
+    _                 _   _ _   _               _  
+    |1   0      0    0|   |x|   |       x       |  
+    |0  cosθ  -sinθ  0| . |y| = |cosθ·y - sinθ·z|  
+    |0  sinθ   cosθ  0|   |z|   |sinθ·y + cosθ·z|  
+    |0   0      0    1|   |1|   |       1       |
+    -                 -   - -   -               -  
+    ```
+    ii. y rotation
+    ```
+    _                 _   _ _   _                _  
+    | cosθ  0  sinθ  0|   |x|   | cosθ·x + sinθ·z|  
+    |  0    1   0    0| . |y| = |        y       |  
+    |-sinθ  0  cosθ  0|   |z|   |-sinθ·x + cosθ·z|  
+    |  0    0   0    1|   |1|   |        1       |
+    -                 -   - -   -                -  
+    ```
+    iii. z rotation
+    ```
+    _                  _   _ _   _               _  
+    |cosθ   -sinθ  0  0|   |x|   |cosθ·x - sinθ·y|  
+    |sinθ    cosθ  0  0| . |y| = |sinθ·x + cosθ·y|  
+    | 0       0    1  0|   |z|   |       z       |  
+    | 0       0    0  1|   |1|   |       1       |
+    -                  -   - -   -               -  
+    ```
+- to combine transforms, just multiple them. then apply to the vector
+- ORDER MATTERS: transforms happen in reverse order
+
+### GLM
+- uses `vec4` (vectors with 4 values) and `mat4` (4x4 matrix) types
+
+### Uniform variables
+- type of a variable in shader
+- uniforms are values global to the shader that aren't associated with a particular vertex
+- each uniform variable has a location ID in the shader
+- we can bind a value to that location
+- **Differences in the context of shade:**  
+    | attribute variables | uniform variables |
+    |-|-|
+    | distinct for each point pass through | we pass one variable and it will be the same on every single instance |
+    | for each time the shader runs, the position will change | is constant over the whole flow |
