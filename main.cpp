@@ -32,7 +32,7 @@ layout (location=0) in vec3 pos; // in:input                    \n\
 uniform mat4 model;                                             \n\
                                                                 \n\
 void main() {                                                   \n\
-    gl_Position = model * vec4(0.4 * pos.x, 0.4 * pos.y, pos.z, 1.0);   \n\
+    gl_Position = model * vec4(pos, 1.0);                       \n\
 }";
 
 // Fragment Shader
@@ -216,16 +216,14 @@ int main() {
 
         // 4x4 identity matrix
         glm::mat4 model(1.0f);
-
         // applies translation
         model = glm::translate(model, glm::vec3(triOffset, 0.0f, 0.0f));
-
         // applies rotation
-        // NOTE THE DISTORTION! -> we're not using the projection matrix!
         model = glm::rotate(model, curAngle * toRadians, glm::vec3(0.0f, 0.0f, 1.0f));
         
-        // order matters!
-        // model = glm::translate(model, glm::vec3(triOffset, 0.0f, 0.0f));
+        // scaling by .4 in x, by 2.4in y and by 1 in z
+        // try different orders :-)
+        model = glm::scale(model, glm::vec3(0.4f, 0.4f, 1.0f));
 
         // 4x4 float values matrix
         glUniformMatrix4fv(uniformModel, 1, GL_FALSE, glm::value_ptr(model));
