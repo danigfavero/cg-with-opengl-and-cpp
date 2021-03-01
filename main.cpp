@@ -5,10 +5,14 @@
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
+
 // Window dimensions
 const GLint WIDTH = 800, HEIGHT = 600;
 
-GLuint VAO, VBO, shader, uniformXMove;
+GLuint VAO, VBO, shader, uniformModel;
 
 // Uniform variables
 bool direction = true;
@@ -22,11 +26,10 @@ static const char* vShader = "                                  \n\
                                                                 \n\
 layout (location=0) in vec3 pos; // in:input                    \n\
                                                                 \n\
-uniform float xMove;                                            \n\
+uniform mat4 model;                                             \n\
                                                                 \n\
 void main() {                                                   \n\
-    // (* 0.4) translates the points, in x and y axis           \n\
-    gl_Position = vec4(0.4 * pos.x + xMove, 0.4 * pos.y, pos.z, 1.0);   \n\
+    gl_Position = model * vec4(0.4 * pos.x, 0.4 * pos.y, pos.z, 1.0);   \n\
 }";
 
 // Fragment Shader
@@ -126,7 +129,7 @@ void CompileShaders() {
         return;
     }
 
-    uniformXMove = glGetUniformLocation(shader, "xMove"); // from layout location=0
+    uniformModel= glGetUniformLocation(shader, "model"); // from layout location=0
 }
 
 int main() {
@@ -203,8 +206,13 @@ int main() {
         // Shaders and rendering pipeline
         glUseProgram(shader);
 
-        // bindind to 1 value of float
-        glUniform1f(uniformXMove, triOffset);
+        // 4x4 identity matrix
+        glm::mat4 model(1.0f);
+        // applies translation to identity matrix (in the x AND y axis)
+        model = glm::translate(model, glm::vec3(triOffset, triOffset, 0.0f));
+
+        // 4x4 float values matrix
+        glUniformMatrix4fv(uniformModel, 1, GL_FALSE, glm::value_ptr(model));
 
         glBindVertexArray(VAO); // bind
         glDrawArrays(GL_TRIANGLES, 0, 3); // start from point 0, 3 points

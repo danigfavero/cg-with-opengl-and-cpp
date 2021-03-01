@@ -114,7 +114,6 @@ g++ -std=c++11 main.cpp -o out -lGLEW -lGL -lGLU -lglfw3 -lX11 -lXxf86vm -lXrand
 ---
 
 ## Vectors, matrices and uniform variables
-- the GLM (OpenGL Mathematics) library will handle all the maths
 
 ### Vectors
 - some basic definitions and operations
@@ -177,8 +176,22 @@ g++ -std=c++11 main.cpp -o out -lGLEW -lGL -lGLU -lglfw3 -lX11 -lXxf86vm -lXrand
 - to combine transforms, just multiple them. then apply to the vector
 - ORDER MATTERS: transforms happen in reverse order
 
-### GLM
+### GLM (OpenGL Mathematics)
 - uses `vec4` (vectors with 4 values) and `mat4` (4x4 matrix) types
+- **installing**  
+    ```bash
+    wget "https://github.com/g-truc/glm/releases/download/0.9.9.8/glm-0.9.9.8.zip"
+    unzip glm-0.9.9.8.zip
+    cd glm-0.9.9.8
+    cd glm
+    cmake ./
+    make
+    sudo make install
+    ```
+    or
+    ```bash
+    sudo apt install libglm-dev
+    ```
 
 ### Uniform variables
 - type of a variable in shader
@@ -190,3 +203,10 @@ g++ -std=c++11 main.cpp -o out -lGLEW -lGL -lGLU -lglfw3 -lX11 -lXxf86vm -lXrand
     |-|-|
     | distinct for each point pass through | we pass one variable and it will be the same on every single instance |
     | for each time the shader runs, the position will change | is constant over the whole flow |
+
+### View, model and projection
+- 3 main matrices: view, model and projection
+- different coordinate systems
+- model: builds from (0,0) - around the origin - to the actual world coordinates
+- view:
+- projection: perspective matrix
