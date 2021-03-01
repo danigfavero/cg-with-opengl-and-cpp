@@ -21,6 +21,8 @@ float triOffset = 0.0f;
 float triMaxoffset = 0.7f;
 float triIncrement = 0.005f;
 
+float curAngle = 0.0f;
+
 // Vertex Shader (should be in another file)
 static const char* vShader = "                                  \n\
 #version 330                                                    \n\
@@ -200,6 +202,11 @@ int main() {
             direction = !direction;
         }
 
+        curAngle += 0.1f;
+        if (curAngle >= 360) {
+            curAngle -= 360;
+        }
+
         // Clear window
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f); // RGB -> [0,1], opacity (alpha)
         glClear(GL_COLOR_BUFFER_BIT);
@@ -209,12 +216,16 @@ int main() {
 
         // 4x4 identity matrix
         glm::mat4 model(1.0f);
-        
-        // applies translation to identity matrix (in the x axis)
+
+        // applies translation
         model = glm::translate(model, glm::vec3(triOffset, 0.0f, 0.0f));
 
-        // applies rotation of 45º, with the origin having a vector pointing to us
-        model = glm::rotate(model, 45 * toRadians, glm::vec3(0.0f, 0.0f, 1.0f));
+        // applies rotation
+        // NOTE THE DISTORTION! -> we're not using the projection matrix!
+        model = glm::rotate(model, curAngle * toRadians, glm::vec3(0.0f, 0.0f, 1.0f));
+        
+        // order matters!
+        // model = glm::translate(model, glm::vec3(triOffset, 0.0f, 0.0f));
 
         // 4x4 float values matrix
         glUniformMatrix4fv(uniformModel, 1, GL_FALSE, glm::value_ptr(model));
