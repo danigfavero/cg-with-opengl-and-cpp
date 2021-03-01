@@ -11,6 +11,7 @@
 
 // Window dimensions
 const GLint WIDTH = 800, HEIGHT = 600;
+const float toRadians = 3.14159265f / 180.0f;
 
 GLuint VAO, VBO, shader, uniformModel;
 
@@ -208,8 +209,12 @@ int main() {
 
         // 4x4 identity matrix
         glm::mat4 model(1.0f);
-        // applies translation to identity matrix (in the x AND y axis)
-        model = glm::translate(model, glm::vec3(triOffset, triOffset, 0.0f));
+        
+        // applies translation to identity matrix (in the x axis)
+        model = glm::translate(model, glm::vec3(triOffset, 0.0f, 0.0f));
+
+        // applies rotation of 45º, with the origin having a vector pointing to us
+        model = glm::rotate(model, 45 * toRadians, glm::vec3(0.0f, 0.0f, 1.0f));
 
         // 4x4 float values matrix
         glUniformMatrix4fv(uniformModel, 1, GL_FALSE, glm::value_ptr(model));
