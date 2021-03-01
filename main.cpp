@@ -23,7 +23,12 @@ float triIncrement = 0.005f;
 
 float curAngle = 0.0f;
 
-// Vertex Shader (should be in another file)
+bool sizeDirection = true;
+float curSize = 0.4f;
+float maxSize = 0.8f;
+float minSize = 0.1f;
+
+// Vertex Shader
 static const char* vShader = "                                  \n\
 #version 330                                                    \n\
                                                                 \n\
@@ -132,7 +137,7 @@ void CompileShaders() {
         return;
     }
 
-    uniformModel= glGetUniformLocation(shader, "model"); // from layout location=0
+    uniformModel = glGetUniformLocation(shader, "model"); // from layout location=0
 }
 
 int main() {
@@ -207,6 +212,16 @@ int main() {
             curAngle -= 360;
         }
 
+        if (sizeDirection) { // enlarge!
+            curSize += 0.001f;
+        } else { // shrink!
+            curSize -= 0.001f;
+        }
+
+        if (curSize >= maxSize || curSize <= minSize) { // flip it!
+            sizeDirection = !sizeDirection;
+        }
+
         // Clear window
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f); // RGB -> [0,1], opacity (alpha)
         glClear(GL_COLOR_BUFFER_BIT);
@@ -216,14 +231,9 @@ int main() {
 
         // 4x4 identity matrix
         glm::mat4 model(1.0f);
-        // applies translation
+        model = glm::rotate(model, curAngle * toRadians, glm::vec3(0.0f, 0.0f, 1.0f)); 
         model = glm::translate(model, glm::vec3(triOffset, 0.0f, 0.0f));
-        // applies rotation
-        model = glm::rotate(model, curAngle * toRadians, glm::vec3(0.0f, 0.0f, 1.0f));
-        
-        // scaling by .4 in x, by 2.4in y and by 1 in z
-        // try different orders :-)
-        model = glm::scale(model, glm::vec3(0.4f, 0.4f, 1.0f));
+        model = glm::scale(model, glm::vec3(curSize, curSize, 1.0f));
 
         // 4x4 float values matrix
         glUniformMatrix4fv(uniformModel, 1, GL_FALSE, glm::value_ptr(model));
