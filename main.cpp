@@ -13,7 +13,7 @@
 const GLint WIDTH = 800, HEIGHT = 600;
 const float toRadians = 3.14159265f / 180.0f;
 
-GLuint VAO, VBO, shader, uniformModel;
+GLuint VAO, VBO, IBO, shader, uniformModel;
 
 // Uniform variables
 bool direction = true;
@@ -40,8 +40,6 @@ uniform mat4 model;                                             \n\
                                                                 \n\
 void main() {                                                   \n\
     gl_Position = model * vec4(pos, 1.0);                       \n\
-    // vertex colors will be their positions                    \n\
-    // 'clamp' makes it non-negative, within 0 and 1            \n\
     vColor = vec4(clamp(pos, 0.0f, 1.0f), 1.0f);                \n\
 }";
 
@@ -58,20 +56,26 @@ void main() {                                                   \n\
 }";
 
 void CreateTriangle() {
-    // window axis:
-    //    __________
-    //   |     1    |
-    //   |-1       1|
-    //   |____-1____|
+    unsigned int indices[] = { // the indices refer to the vertices array
+        0, 3, 1, // side of pyramid
+        1, 3, 2, // another side
+        2, 3, 0, // front face
+        0, 1, 2  // base of pyramid
+    };
 
-    GLfloat vertices[] = {  // vertex pos becomes vertex color
-        -1.0f, -1.0f, 0.0f, // black
-        1.0, -1.0f, 0.0f,   // red
-        0.0f, 1.0f, 0.0f    // green
+    GLfloat vertices[] = {
+        -1.0f, -1.0f, 0.0f,
+        0.0f, -1.0f, 1.0f, // 4th point to the pyramid
+        1.0, -1.0f, 0.0f,
+        0.0f, 1.0f, 0.0f
     };
 
     glGenVertexArrays(1, &VAO); // &VAO is the id
     glBindVertexArray(VAO);
+
+    glGenBuffers(1, &IBO); // binding IBO
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
     glGenBuffers(1, &VBO); // &VBO is the id
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
@@ -81,6 +85,7 @@ void CreateTriangle() {
     glEnableVertexAttribArray(0);
 
     glBindBuffer(GL_ARRAY_BUFFER, 0); // unbind
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0); // unbind
 
     glBindVertexArray(0); // unbind
 }
@@ -189,6 +194,9 @@ int main() {
         return 1;
     }
 
+    // a face of the pyramid should not appear when in the back
+    glEnable(GL_DEPTH_TEST);
+
     // Setup viewport size
     glViewport(0, 0, bufferWidth, bufferHeight);
 
@@ -214,7 +222,7 @@ int main() {
             direction = !direction;
         }
 
-        curAngle += 0.1f;
+        curAngle += 0.5f;
         if (curAngle >= 360) {
             curAngle -= 360;
         }
@@ -231,14 +239,14 @@ int main() {
 
         // Clear window
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f); // RGB -> [0,1], opacity (alpha)
-        glClear(GL_COLOR_BUFFER_BIT);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         // Shaders and rendering pipeline
         glUseProgram(shader);
 
         // 4x4 identity matrix
         glm::mat4 model(1.0f);
-        // model = glm::rotate(model, curAngle * toRadians, glm::vec3(0.0f, 0.0f, 1.0f)); 
+        model = glm::rotate(model, curAngle * toRadians, glm::vec3(0.0f, 1.0f, 0.0f)); 
         // model = glm::translate(model, glm::vec3(triOffset, 0.0f, 0.0f));
         model = glm::scale(model, glm::vec3(0.4f, 0.4f, 1.0f));
 
@@ -246,8 +254,10 @@ int main() {
         glUniformMatrix4fv(uniformModel, 1, GL_FALSE, glm::value_ptr(model));
 
         glBindVertexArray(VAO); // bind
-        glDrawArrays(GL_TRIANGLES, 0, 3); // start from point 0, 3 points
-        glBindVertexArray(VAO); // unbind
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO);
+        glDrawElements(GL_TRIANGLES, 12, GL_UNSIGNED_INT, 0);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+        glBindVertexArray(0); // unbind
 
         glUseProgram(0); // close shader
 
