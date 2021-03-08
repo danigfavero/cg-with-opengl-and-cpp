@@ -34,20 +34,27 @@ static const char* vShader = "                                  \n\
                                                                 \n\
 layout (location=0) in vec3 pos; // in:input                    \n\
                                                                 \n\
+out vec4 vColor;                                                \n\
+                                                                \n\
 uniform mat4 model;                                             \n\
                                                                 \n\
 void main() {                                                   \n\
     gl_Position = model * vec4(pos, 1.0);                       \n\
+    // vertex colors will be their positions                    \n\
+    // 'clamp' makes it non-negative, within 0 and 1            \n\
+    vColor = vec4(clamp(pos, 0.0f, 1.0f), 1.0f);                \n\
 }";
 
 // Fragment Shader
 static const char* fShader = "                                  \n\
 #version 330                                                    \n\
                                                                 \n\
+in vec4 vColor;                                                 \n\
+                                                                \n\
 out vec4 color;                                                 \n\
                                                                 \n\
 void main() {                                                   \n\
-    color = vec4(1.0, 0.0, 0.0, 1.0);                           \n\
+    color = vColor;                                             \n\
 }";
 
 void CreateTriangle() {
@@ -57,10 +64,10 @@ void CreateTriangle() {
     //   |-1       1|
     //   |____-1____|
 
-    GLfloat vertices[] = {
-        -1.0f, -1.0f, 0.0f,
-        1.0, -1.0f, 0.0f,
-        0.0f, 1.0f, 0.0f
+    GLfloat vertices[] = {  // vertex pos becomes vertex color
+        -1.0f, -1.0f, 0.0f, // black
+        1.0, -1.0f, 0.0f,   // red
+        0.0f, 1.0f, 0.0f    // green
     };
 
     glGenVertexArrays(1, &VAO); // &VAO is the id
@@ -231,9 +238,9 @@ int main() {
 
         // 4x4 identity matrix
         glm::mat4 model(1.0f);
-        model = glm::rotate(model, curAngle * toRadians, glm::vec3(0.0f, 0.0f, 1.0f)); 
-        model = glm::translate(model, glm::vec3(triOffset, 0.0f, 0.0f));
-        model = glm::scale(model, glm::vec3(curSize, curSize, 1.0f));
+        // model = glm::rotate(model, curAngle * toRadians, glm::vec3(0.0f, 0.0f, 1.0f)); 
+        // model = glm::translate(model, glm::vec3(triOffset, 0.0f, 0.0f));
+        model = glm::scale(model, glm::vec3(0.4f, 0.4f, 1.0f));
 
         // 4x4 float values matrix
         glUniformMatrix4fv(uniformModel, 1, GL_FALSE, glm::value_ptr(model));

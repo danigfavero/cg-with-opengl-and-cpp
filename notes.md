@@ -80,7 +80,7 @@ g++ -std=c++11 main.cpp -o out -lGLEW -lGL -lGLU -lglfw3 -lX11 -lXxf86vm -lXrand
 - can alter primitive type
 
 5. Vertex post-processing  
-    i. Tranform Feedback
+    i. Transform Feedback
     - result of vertex and geometry stages saved to buffers for later use   
 
     ii. Clipping
@@ -125,6 +125,8 @@ g++ -std=c++11 main.cpp -o out -lGLEW -lGL -lGLU -lglfw3 -lX11 -lXxf86vm -lXrand
 - matrix transformations (translation, rotation, scaling)
 1. **Translation**  
     - changing of `(X,Y,Z)` position of point `(x,y,z)`
+
+    [comment]: # (latex???????)
     ```
     _          _   _ _   _     _  
     |1  0  0  X|   |x|   |x + X|  
@@ -210,3 +212,47 @@ g++ -std=c++11 main.cpp -o out -lGLEW -lGL -lGLU -lglfw3 -lX11 -lXxf86vm -lXrand
 - model: builds from (0,0) - around the origin - to the actual world coordinates
 - view:
 - projection: perspective matrix
+
+---
+
+## Interpolation, Indexed Draws and Projections
+
+### Interpolation
+- per-vertex attributes passed on are "interpolated" using the other values on the primitive
+- a weighted average of the 3 vertices on a triangle is passed on
+- important for lighting and textures, especially useful in *Phong Shading* to create the illusion of smooth/rounded surfaces
+- fragment shader picks up the interpolated value and uses that
+- effectively an estimate that we define
+- happens during the rasterization stage
+
+### Indexed Draws
+- PROBLEM: cube will consist of 12 triangles => 36 vertices, but cube has only 8 (some will be defined multiple times)
+- SOLUTION: define the 8 vertices of the cube and number them
+- bind them to an Element Array Buffer in the VAO
+- sometimes they're called an "element" instead of an "index"
+- PROBLEM: can still be a bit of a pain (write every triangle, vertex by vertex)
+- SOLUTION: 3D modelling software -- load in models
+
+### Projections
+- used to convert from "View Space" to "Clip Space"
+- can be used to give the scene a 3D look // 2D style
+- need to understand coordinate systems
+
+- **Coordinate Systems**
+    - *Local Space:* raw position of each vertex drawn relative to origin (multiply by model matrix)
+    - *World Space:* position of vertex in the world itself if camera is assumed to be positioned at the origin (multiply by view matrix)
+    - *View Space:* position of vertex in the world, relative to the camera position and orientation (multiply by projection matrix)
+    - *Clip Space:* position of vertex in the world, relative to the camera position and orientation, as viewed in the area not to be "clipped" from the final output. to create it, we define an area (frustum) of what is not to be clipped with a projection matrix
+    - *Screen Space:* after clipping takes place, the final image is created and placed on the coordinate system of the window itself
+- **2 commonly used types of projection:**
+    - Orthographic (2D)  
+    ![Orthographic projection](/img/orthographic_projection.png)
+        - the frustum is cuboid
+        - everything between the *far plane* and *near plane* is kept, rest is discarded
+        - parallel nature means 3D depth is not visible
+        - move object closer/further and it won't change size on screen
+    - Perspective (3D)
+    ![Perspective projection](/img/perspective_projection.png)
+        - the frustum is a truncated pyramid
+        - each pixel on *near plane* diverges at an angle to reach matching point on *far plane*
+        - gives the illusion of depth
